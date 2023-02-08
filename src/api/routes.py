@@ -11,8 +11,6 @@ import json
 
 api = Blueprint('api', __name__)
 
-
-
 #USER
 
 @api.route('/users', methods=['GET'])
@@ -69,19 +67,6 @@ def user_login():
                      "access_token": access_token}    
     return jsonify(response_body), 200
 
-
-@api.route('/users/<int:user_id>', methods=['DELETE'])
-def delete_user(user_id):
-    user = User.query.get(user_id)
-    if user is None:
-        raise APIException('User not found', status_code=404)
-    db.session.delete(user)
-    db.session.commit()
-    response_body = {
-        "message": "User deleted correctly"}    
-    return jsonify(response_body), 200
-
-
 @api.route('/users/<int:user_id>', methods=['PUT'])
 def modify_user(user_id):
     user = User.query.get(user_id)
@@ -104,6 +89,20 @@ def modify_user(user_id):
                      'country': user.country}
 
     return jsonify(response_body), 200
+
+@api.route('/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if user is None:
+        raise APIException('User not found', status_code=404)
+    db.session.delete(user)
+    db.session.commit()
+    response_body = {
+        "message": "User deleted correctly"}    
+    return jsonify(response_body), 200
+
+
+
     
 # EVENTS
 
@@ -191,7 +190,7 @@ def get_contacts_by_id(contact_id):
 @api.route('/contact/register', methods=['POST'])
 def create_contact():
     body = request.get_json()
-    new_contact = Contacts(email=body["email"], user_id=body["user_id"])
+    new_contact = Contacts(name=body["name"], email=body["email"], user_id=body["user_id"])
     print(body)
     print(new_contact)
     db.session.add(new_contact)
@@ -204,11 +203,13 @@ def modify_contact(contact_id):
     if contact is None:
         raise APIException('Contact not found', status_code=404)
 
+    contact.name = request.json.get('name', contact.name)
     contact.email = request.json.get('email', contact.email)
     contact.user_id = request.json.get('user_id', contact.user_id)
     db.session.commit()
 
-    response_body = {'email': contact.email,
+    response_body = {'name': contact.name,
+                    'email': contact.email,
                      'user_id': contact.user_id}
 
     return jsonify(response_body), 200
