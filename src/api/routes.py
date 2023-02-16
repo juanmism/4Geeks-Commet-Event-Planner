@@ -2,7 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Events, Contacts, Event_Guests
+from api.models import db, User, Events, Contacts, Event_Guests, Contact_Forms
 from api.utils import generate_sitemap, APIException
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -275,4 +275,64 @@ def delete_events_guests(events_guest_id):
     db.session.commit()
     response_body = {
         "message": "Events_guest deleted correctly"}    
+    return jsonify(response_body), 200
+
+# CONTACT_FORMS
+
+@api.route('/contact_forms', methods=['GET'])
+def get_all_contact_forms():
+    contacts_forms = Contact_Forms.query.all()
+    results = [contacts_form.serialize() for contacts_form in contacts_forms]
+    response_body = {'message': 'OK',
+                     'total_records': len(results),
+                     'results': results}
+    return jsonify(response_body), 200
+
+
+@api.route('/contact_forms/<contact_forms_id>', methods=['GET'])
+def get_contact_forms_by_id(contact_forms_id):
+    print(contact_forms_id)
+    contact_form = Contact_Forms.query.get(contact_forms_id)
+    print(contact_form)
+    return jsonify(contact_form.serialize()), 200
+
+
+@api.route('/contact_forms/register', methods=['POST'])
+def create_contact_forms():
+    body = request.get_json()
+    new_contact_forms = Contact_Forms(email=body["email"], name=body["name"], message=body["message"],  user_id=body["user_id"])
+    print(body)
+    print(new_contact_forms)
+    db.session.add(new_contact_forms)
+    db.session.commit()
+    return jsonify(new_contact_forms.serialize()), 200
+
+
+@api.route('/contact_forms/<int:contact_forms_id>', methods=['PUT'])
+def modify_contact_forms(contact_forms_id):
+    contact_forms = Contact_Forms.query.get(contact_forms_id)
+    if contact_forms is None:
+        raise APIException('Contact not found', status_code=404)
+
+    contact_forms.email = request.json.get('email', contact_forms.email)
+    contact_forms.name = request.json.get('name', contact_forms.name)
+    contact_forms.user_id = request.json.get('user_id', contact_forms.user_id)
+    db.session.commit()
+
+    response_body = {'email': contact_forms.email,
+                     'name': contact_forms.name,   
+                     'user_id': contact_forms.user_id}
+
+    return jsonify(response_body), 200
+
+
+@api.route('/contact_forms/<int:contact_forms_id>', methods=['DELETE'])
+def delete_contact_forms(contact_forms_id):
+    contact_form = Contact_Forms.query.get(contact_forms_id)
+    if contact_form is None:
+        raise APIException('Contact not found', status_code=404)
+    db.session.delete(contact_form)
+    db.session.commit()
+    response_body = {
+        "message": "Contact deleted correctly"}    
     return jsonify(response_body), 200

@@ -96,3 +96,24 @@ class Event_Guests(db.Model):
         "user_id": self.user_id,
     }
 
+class Contact_Forms(db.Model):
+    __tablename__='contact_forms'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    message = db.Column(db.String(250), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  
+    user = db.relationship(User)
+
+    def __repr__(self):
+        return f'<Contact_Forms {self.id}>'  
+
+    def serialize(self):
+        return {
+        "id": self.id,
+        "name": self.name,
+        "email": self.email,
+        "message": self.message,
+        "user_id": self.user_id,
+    }
+
